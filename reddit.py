@@ -6,7 +6,7 @@ import time
 
 class Reddit:
     def __init__(self, config):
-        logging.info("Starting Reddit::Reddit")
+        logging.info("Reddit::__init__")
 
         self.time_format = '%Y-%m-%d %H:%M:%S'
 
@@ -20,7 +20,7 @@ class Reddit:
         self.update_frequency = config.getint("reddit", "update_frequency", fallback=300)
 
     async def check_feeds(self, client):
-        logging.info("Starting Reddit::check_feeds")
+        logging.info("Reddit::check_feeds")
 
         await client.wait_until_ready()
 
@@ -38,7 +38,7 @@ class Reddit:
             # Get a list of all the latest posts
             new_posts = []
             for i, (name, last_updated) in enumerate(self.subreddits):
-                logging.info("Checking for updated to {0} since {1}".format(name, time.strftime(self.time_format, last_updated)))
+                logging.debug("Checking for updated to {0} since {1}".format(name, time.strftime(self.time_format, last_updated)))
 
                 # Grab the feeds
                 try:
@@ -49,19 +49,19 @@ class Reddit:
                         entry_updated = entry['updated_parsed']
                         logging.debug('Comparing {0} to {1}'.format(time.strftime(self.time_format, entry_updated), time.strftime(self.time_format, last_updated)))
                         if entry_updated > last_updated:
-                            logging.info('Found entry {0}'.format(entry['title']))
+                            logging.debug('Found entry {0}'.format(entry['title']))
                             new_posts.append(entry['link'])
                             last_updated = entry_updated
 
                     # Mark the subreddit as read
-                    logging.info('Marking {0} last entry as {1}'.format(name, time.strftime(self.time_format, last_updated)))
+                    logging.debug('Marking {0} last entry as {1}'.format(name, time.strftime(self.time_format, last_updated)))
                     self.subreddits[i] = (name, last_updated)
                 except:
                     logging.exception('Failed to get feed for {0}'.format(name))
 
             for channel in self.channels:
                 for post in new_posts:
-                    logging.info('Sending post {0} to {1} ({2})'.format(post, channel.name, channel.id))
+                    logging.debug('Sending post {0} to {1} ({2})'.format(post, channel.name, channel.id))
                     await client.send_message(channel, post)
             await asyncio.sleep(self.update_frequency)
 

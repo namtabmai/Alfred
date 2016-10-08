@@ -10,7 +10,7 @@ __version__ = '0.2'
 
 if __name__ == "__main__":
     try:
-        logging.basicConfig(level=logging.INFO)
+        logging.basicConfig(format="%(asctime)s %(levelname)-8s %(message)s", level=logging.INFO)
         logging.info("Starting Alfred version {0}".format(__version__))
         config = configparser.ConfigParser()
         config.read("alfred.ini")
