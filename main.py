@@ -6,11 +6,11 @@ import discord
 import logging
 import reddit
 
-__version__ = '0.2'
+__version__ = '0.3'
 
 if __name__ == "__main__":
     try:
-        logging.basicConfig(format="%(asctime)s %(levelname)-8s %(message)s", level=logging.INFO)
+        logging.basicConfig(format="%(asctime)s [%(levelname)-8s] [%(module)-8s] %(message)s", level=logging.INFO)
         logging.info("Starting Alfred version {0}".format(__version__))
         config = configparser.ConfigParser()
         config.read("alfred.ini")
