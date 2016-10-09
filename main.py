@@ -18,7 +18,7 @@ if __name__ == "__main__":
         token = config.get("main", "token")
 
         loglevel = config.get("main", "log_level", fallback="INFO")
-        logging.basicConfig(level=loglevel)
+        logging.getLogger().setLevel(loglevel)
 
         logging.info("Starting discord client using token={0}".format(token))
 
@@ -29,8 +29,5 @@ if __name__ == "__main__":
 
     except (KeyError, configparser.NoSectionError, configparser.NoOptionError) as err:
         logging.exception("Error reading configuration file.\r\n{0}\r\n".format(err))
-
-
-
 
 
