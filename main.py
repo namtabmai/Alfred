@@ -6,7 +6,7 @@ import discord
 import logging
 import reddit
 
-__version__ = '0.3'
+__version__ = '0.4'
 
 if __name__ == "__main__":
     try:
