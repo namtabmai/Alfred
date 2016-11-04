@@ -50,7 +50,7 @@ class Reddit:
                         logging.debug('Comparing {0} to {1}'.format(time.strftime(self.time_format, entry_updated), time.strftime(self.time_format, last_updated)))
                         if entry_updated > last_updated:
                             logging.debug('Found entry {0}'.format(entry['title']))
-                            new_posts.append(entry['link'])
+                            new_posts.append(entry['link'] + '\n submitted by ' + entry['author.name'])
                             last_updated = entry_updated
 
                     # Mark the subreddit as read
