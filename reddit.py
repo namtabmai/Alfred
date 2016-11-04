@@ -49,8 +49,8 @@ class Reddit:
                         entry_updated = entry['updated_parsed']
                         logging.debug('Comparing {0} to {1}'.format(time.strftime(self.time_format, entry_updated), time.strftime(self.time_format, last_updated)))
                         if entry_updated > last_updated:
-                            logging.debug('Found entry {0}'.format(entry['title']))
-                            new_posts.append(entry['link'])
+                            logging.debug('Found entry {0}'.format(entry.title))
+                            new_posts.append(entry)
                             last_updated = entry_updated
 
                     # Mark the subreddit as read
@@ -61,7 +61,10 @@ class Reddit:
 
             for channel in self.channels:
                 for post in new_posts:
-                    logging.debug('Sending post {0} to {1} ({2})'.format(post, channel.name, channel.id))
-                    await client.send_message(channel, post)
+                    logging.debug('Sending post {0} to {1} ({2})'.format(post.link, channel.name, channel.id))
+
+                    message = "New post by {0}\r\n{1}".format(post.author, post.link)
+
+                    await client.send_message(channel, message)
             await asyncio.sleep(self.update_frequency)
 
