@@ -11,9 +11,11 @@ class Reddit:
         self.time_format = '%Y-%m-%d %H:%M:%S'
 
         self.subreddits = ()
+        self.shit_posters = []
         try:
             subreddits = config.get("reddit", "subreddits")
             self.subreddits = [(subreddit, time.gmtime()) for subreddit in subreddits.split(",")]
+            self.shit_posters = config.get("reddit", "shit_posters")
         except:
             logging.exception("Could not initialise reddit")
 
@@ -63,7 +65,9 @@ class Reddit:
                 for post in new_posts:
                     logging.debug('Sending post {0} to {1} ({2})'.format(post.link, channel.name, channel.id))
 
-                    message = "New post by {0}\r\n{1}".format(post.author, post.link)
+                    post_type = "shit post" if post.author[3:].lower() in self.shit_posters else "post"
+
+                    message = "New {0} by {1}\r\n{2}".format(post_type, post.author, post.link)
 
                     await client.send_message(channel, message)
             await asyncio.sleep(self.update_frequency)
