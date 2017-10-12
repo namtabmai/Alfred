@@ -1,7 +1,7 @@
 #!/bin/env python
 
 import asyncio
-import configparser
+from config import Config
 import discord
 import logging
 import reddit
@@ -12,22 +12,22 @@ if __name__ == "__main__":
     try:
         logging.basicConfig(format="%(asctime)s [%(levelname)-8s] [%(module)-8s] %(message)s", level=logging.INFO)
         logging.info("Starting Alfred version {0}".format(__version__))
-        config = configparser.ConfigParser()
-        config.read("alfred.ini")
+        config = Config("alfred.db")
 
-        token = config.get("main", "token")
+        token = config.get("token")
 
-        loglevel = config.get("main", "log_level", fallback="INFO")
+        loglevel = config.get("log_level")
         logging.getLogger().setLevel(loglevel)
 
-        logging.info("Starting discord client using token={0}".format(token))
+
+        logging.info("Starting discord client using token={0}, log_level={1}".format(token, loglevel))
 
         client = discord.Client()
         reddit = reddit.Reddit(config)
         client.loop.create_task(reddit.check_feeds(client))
         client.run(token)
 
-    except (KeyError, configparser.NoSectionError, configparser.NoOptionError) as err:
+    except Exception as err:
         logging.exception("Error reading configuration file.\r\n{0}\r\n".format(err))
 
 
