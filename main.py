@@ -6,7 +6,7 @@ import discord
 import logging
 import reddit
 
-__version__ = '0.5'
+__version__ = '0.6'
 
 if __name__ == "__main__":
     try:
@@ -16,7 +16,7 @@ if __name__ == "__main__":
 
         token = config.get("token")
 
-        loglevel = config.get("log_level")
+        loglevel = config.get("log_level", fallback="INFO")
         logging.getLogger().setLevel(loglevel)
 
 
