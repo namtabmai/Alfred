@@ -1,6 +1,4 @@
-from datetime import datetime
 import sqlite3
-import time
 
 class Config:
     class Reddit:
@@ -14,7 +12,7 @@ class Config:
                     'name': row['channel_name']
             }
             self.subreddit = row['subreddit']
-            self.last_updated = datetime.fromtimestamp(row['last_updated']).timetuple()
+            self.last_updated = row['last_updated']
 
     def __init__(self, filename):
         self.db = sqlite3.Connection(filename)
@@ -56,7 +54,7 @@ class Config:
     def update_reddit(self, subreddit, last_update):
         self.db.execute('''
             UPDATE reddit SET last_updated = :last_update WHERE subreddit = :subreddit
-        ''', {"subreddit": subreddit, "last_update": time.mktime(last_update)})
+        ''', {"subreddit": subreddit, "last_update": last_update})
         self.db.commit()
 
 
