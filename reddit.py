@@ -79,13 +79,12 @@ class Reddit:
             for subreddit in {r.subreddit for r in reddit_data}:
                 # Get all the latest posts for the subreddit
                 new_posts = self.get_rss_posts(subreddit)
+                if not new_posts:
+                    continue
 
-                # Loop through all the channels we need to post this update to
-                for channel in [reddit.channel for reddit in reddit_data if reddit.subreddit is subreddit]:
-                    # get the discord channel from our channel
-                    discord_channels = [dc for dc in client.get_all_channels() if dc.id == channel['discord_id']]
-                    for dc in discord_channels:
-                        for post in new_posts:
-                            await self.send_reddit_link(client, dc, post)
+                for channel in [client.get_channel(reddit.channel['discord_id']) for reddit in reddit_data if reddit.subreddit == subreddit]:
+                    logging.debug("Posting all new posts for subreddit {0} to {1}:{2}".format(subreddit, channel.server.name, channel.name))
+                    for post in new_posts:
+                        await self.send_reddit_link(client, dc, post)
             await asyncio.sleep(self.update_frequency)
 

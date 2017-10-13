@@ -18,6 +18,9 @@ if __name__ == "__main__":
 
         loglevel = config.get("log_level", fallback="INFO")
         logging.getLogger().setLevel(loglevel)
+        logFileHandler = logging.FileHandler("alfred.log")
+        logFileHandler.setLevel(logging.DEBUG)
+        logging.getLogger().addHandler(logFileHandler)
 
 
         logging.info("Starting discord client using token={0}, log_level={1}".format(token, loglevel))
