@@ -85,6 +85,6 @@ class Reddit:
                 for channel in [client.get_channel(reddit.channel['discord_id']) for reddit in reddit_data if reddit.subreddit == subreddit]:
                     logging.debug("Posting all new posts for subreddit {0} to {1}:{2}".format(subreddit, channel.server.name, channel.name))
                     for post in new_posts:
-                        await self.send_reddit_link(client, dc, post)
+                        await self.send_reddit_link(client, channel, post)
             await asyncio.sleep(self.update_frequency)
 
