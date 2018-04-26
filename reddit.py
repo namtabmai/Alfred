@@ -13,7 +13,7 @@ class Reddit:
 
         self.update_frequency = 300
         try:
-            self.update_frequency = self.config.get("reddit_update_frequency", fallback=300)
+            self.update_frequency = int(self.config.get("reddit_update_frequency", fallback=300))
         except:
             logging.exception("Could not initialise reddit")
 
