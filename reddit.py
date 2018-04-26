@@ -2,6 +2,8 @@ import asyncio
 import discord
 import feedparser
 import logging
+import html2text
+import re
 
 class Reddit:
     def __init__(self, config):
@@ -45,16 +47,44 @@ class Reddit:
 
         return new_posts
 
-    async def send_reddit_link(self, client, channel, post):
+    def format_post(self, subreddit, post):
+        # Convert the HTML to markdown, ignore images, no line breaks
+        h = html2text.HTML2Text()
+        h.ignore_images = True
+        h.body_width = 0
+
+        description = h.handle(post.summary)
+        # Strip out the comments link
+        description = re.sub(r"\[\[comments\]\]\([^)]+\)", "", description)
+        # Strip out the link
+        description = re.sub(r"\[\[link\]\]\([^)]+\)", "", description)
+        # Strip out the submitter link
+        description = re.sub(r"submitted by (\[[^\]]+]\([^\)]+\))", "", description)
+
+        # Take the first 27 words from the summary
+        description = " ".join(description.split()[0:26]) + "..."
+
+        author = post.get("author", "deleted")
+        author = author if author == "deleted" else '[{0}]({1})'.format(post.author_detail.name, post.author_detail.href)
+
+        colour = int(subreddit.colour, 0) if subreddit.colour is not None else None
+
+        embed = discord.Embed(title=post.title, url=post.link, description=description, color=colour)
+        embed.add_field(name="New post by", value=author, inline=False)
+        embed.add_field(name="To", value='[{0}](https://www.reddit.com/r/{1})'.format(subreddit.subreddit, subreddit.subreddit), inline=False)
+        # find an image, if there is one
+        matches = re.search(r'src="(.+?\.(png|gif|jpg|jpeg))"', post.summary)
+        if matches is not None:
+            embed.set_thumbnail(url=matches.group(1))
+
+        return embed
+
+    async def send_reddit_link(self, client, channel, subreddit, post):
         logging.debug('Sending post {0} to server {1} ({2}) - channel {3} ({4})'.format(post.link, channel.server.name, channel.server.id, channel.name, channel.id))
 
-        # Apparently the rss feed returned deleted posts. Great.
-        author = post.get("author", "deleted")
-        #post_type = "shit post" if author[3:].lower() in self.shit_posters else "post"
-        post_type = "post"
-        message = "New {0} by {1}\r\n{2}".format(post_type, author, post.link)
+        message = self.format_post(subreddit, post)
 
-        await client.send_message(channel, message)
+        await client.send_message(channel, embed=message)
 
     async def check_feeds(self, client):
         logging.info("Reddit::check_feeds")
@@ -76,15 +106,15 @@ class Reddit:
             reddit_data = self.config.get_reddit()
 
             # Loop through all the rss feeds that have been updated
-            for subreddit in {r.subreddit for r in reddit_data}:
+            for subreddit in reddit_data:
                 # Get all the latest posts for the subreddit
-                new_posts = self.get_rss_posts(subreddit)
+                new_posts = self.get_rss_posts(subreddit.subreddit)
                 if not new_posts:
                     continue
 
-                for channel in [client.get_channel(reddit.channel['discord_id']) for reddit in reddit_data if reddit.subreddit == subreddit]:
-                    logging.debug("Posting all new posts for subreddit {0} to {1}:{2}".format(subreddit, channel.server.name, channel.name))
+                for channel in [client.get_channel(reddit.channel['discord_id']) for reddit in reddit_data if reddit.subreddit == subreddit.subreddit]:
+                    logging.debug("Posting all new posts for subreddit {0} to {1}:{2}".format(subreddit.subreddit, channel.server.name, channel.name))
                     for post in new_posts:
-                        await self.send_reddit_link(client, channel, post)
+                        await self.send_reddit_link(client, channel, subreddit, post)
             await asyncio.sleep(self.update_frequency)
 
