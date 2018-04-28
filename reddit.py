@@ -67,7 +67,7 @@ class Reddit:
         author = post.get("author", "deleted")
         author = author if author == "deleted" else '[{0}]({1})'.format(post.author_detail.name, post.author_detail.href)
 
-        colour = int(subreddit.colour, 0) if subreddit.colour is not None else None
+        colour = int(subreddit.colour, 0) if subreddit.colour is not None else discord.Embed.Empty
 
         embed = discord.Embed(title=post.title, url=post.link, description=description, color=colour)
         embed.add_field(name="New post by", value=author, inline=False)
