@@ -47,11 +47,32 @@ class Reddit:
 
         return new_posts
 
+    def add_image(self, content, embed):
+        # find an image, if there is one
+        logging.debug('Looking for image: {0}'.format(content))
+        matches = re.search(r'(src|href)="([^"]+?\.(png|gif|jpg|jpeg))"', content)
+        if matches is not None:
+            logging.debug('Found image: {0}'.format(matches.group(2)))
+            embed.set_thumbnail(url=matches.group(2))
+
+    def add_user(self, post, embed):
+        author = post.get("author", "deleted")
+        author = author if author == "deleted" else post.author_detail.name[3:]
+
+        shit_post = True if author.lower() in self.config.get("shit_posters", "").split(",") else False
+
+        name = "New shit post by" if shit_post else "New post by"
+        link = "" if author == "deleted" else "[{0}]({1})".format(author, post.author_detail.href)
+
+        embed.add_field(name=name, value=link, inline=False)
+
     def format_post(self, subreddit, post):
         # Convert the HTML to markdown, ignore images, no line breaks
         h = html2text.HTML2Text()
         h.ignore_images = True
         h.body_width = 0
+
+        synopsisWordCount = int(self.config.get("reddit_synopsis_word_count", 26))
 
         description = h.handle(post.summary)
         # Strip out the comments link
@@ -62,20 +83,14 @@ class Reddit:
         description = re.sub(r"submitted by (\[[^\]]+]\([^\)]+\))", "", description)
 
         # Take the first 27 words from the summary
-        description = " ".join(description.split()[0:26]) + "..."
-
-        author = post.get("author", "deleted")
-        author = author if author == "deleted" else '[{0}]({1})'.format(post.author_detail.name, post.author_detail.href)
+        description = " ".join(description.split()[0:synopsisWordCount]) + "..."
 
         colour = int(subreddit.colour, 0) if subreddit.colour is not None else discord.Embed.Empty
 
         embed = discord.Embed(title=post.title, url=post.link, description=description, color=colour)
-        embed.add_field(name="New post by", value=author, inline=False)
-        embed.add_field(name="To", value='[{0}](https://www.reddit.com/r/{1})'.format(subreddit.subreddit, subreddit.subreddit), inline=False)
-        # find an image, if there is one
-        matches = re.search(r'src="(.+?\.(png|gif|jpg|jpeg))"', post.summary)
-        if matches is not None:
-            embed.set_thumbnail(url=matches.group(1))
+
+        self.add_image(post.summary, embed)
+        self.add_user(post, embed)
 
         return embed
 
