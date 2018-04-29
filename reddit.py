@@ -74,6 +74,9 @@ class Reddit:
 
         embed.add_field(name=name, value=link, inline=False)
 
+    def add_subreddit(self, subreddit, embed):
+        embed.add_field(name="To", value='[{0}](https://www.reddit.com/r/{1})'.format(subreddit.subreddit, subreddit.subreddit))
+
     def format_post(self, subreddit, post):
         # Convert the HTML to markdown, ignore images, no line breaks
         h = html2text.HTML2Text()
@@ -101,6 +104,7 @@ class Reddit:
 
         self.add_image(post.summary, embed)
         self.add_user(post, embed)
+        self.add_subreddit(subreddit, embed)
 
         return embed
 
