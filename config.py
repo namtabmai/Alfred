@@ -14,6 +14,7 @@ class Config:
             self.subreddit = row['subreddit']
             self.last_updated = row['last_updated']
             self.colour = row['colour']
+            self.filter_regex = row['filter_regex']
 
     def __init__(self, filename):
         self.db = sqlite3.Connection(filename)
@@ -39,7 +40,7 @@ class Config:
         cur = self.db.execute('''
             SELECT server.discord_id AS server_discord_id, server.name AS server_name,
                 channel.discord_id AS channel_discord_id, channel.name AS channel_name,
-                subreddit, last_updated, colour
+                subreddit, last_updated, colour, filter_regex
             FROM reddit
             LEFT JOIN channel ON reddit.channel_id = channel.id
             LEFT JOIN server ON channel.server_id = server.id

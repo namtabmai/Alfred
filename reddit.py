@@ -108,6 +108,26 @@ class Reddit:
 
         return embed
 
+    def filter_posts(self, reddit, posts):
+        logging.debug('Filtering posts for {0} with filter_regex {1}'.format(reddit.subreddit, reddit.filter_regex))
+
+        if reddit.filter_regex is None:
+            logging.debug('No filter regex defined')
+            return posts
+
+        filtered_posts = []
+
+        regex = re.compile(reddit.filter_regex, re.IGNORECASE)
+
+        for post in posts:
+            logging.debug('Checking for match against {0}'.format(post.title))
+
+            if regex.search(post.title) is not None or regex.search(post.description) is not None:
+                logging.debug('Found matching filtered post {0}'.format(post.title))
+                filtered_posts.append(post)
+
+        return filtered_posts
+
     async def send_reddit_link(self, client, channel, subreddit, post):
         logging.debug('Sending post {0} to server {1} ({2}) - channel {3} ({4})'.format(post.link, channel.server.name, channel.server.id, channel.name, channel.id))
 
@@ -140,12 +160,16 @@ class Reddit:
             for subreddit in reddit_data:
                 # Get all the latest posts for the subreddit
                 new_posts = self.get_rss_posts(subreddit.subreddit)
-                if not new_posts:
-                    continue
 
-                for channel in [client.get_channel(reddit.channel['discord_id']) for reddit in reddit_data if reddit.subreddit == subreddit.subreddit]:
-                    logging.debug('Posting all new posts for subreddit {0} to {1}:{2}'.format(subreddit.subreddit, channel.server.name, channel.name))
-                    for post in new_posts:
+                for reddit, channel in [[reddit, client.get_channel(reddit.channel['discord_id'])] for reddit in reddit_data if reddit.subreddit == subreddit.subreddit]:
+                    filtered_posts = self.filter_posts(reddit, new_posts)
+
+                    if not filtered_posts:
+                        continue
+
+                    logging.debug('Posting new posts for subreddit {0} to {1}:{2}'.format(subreddit.subreddit, channel.server.name, channel.name))
+                    for post in filtered_posts:
                         await self.send_reddit_link(client, channel, subreddit, post)
+
             await asyncio.sleep(self.update_frequency)
 
